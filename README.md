@@ -1,10 +1,10 @@
-#RAMBench: iOS RAM Benchmarking Tool
+# RAMBench: iOS RAM Benchmarking Tool
 
 ##Overview
 RAMBench is a iOS app designed to benchmark the RAM limits of your iOS device, helping users understand how much memory an app can allocate before hitting system constraints. With recent iOS updates (18.2–18.5) introducing changes to memory management that have caused confusion (specifically for emulation and power-users of the platform), RAMBench provides a clear way to test and visualize memory allocation limits specific to your device and iOS version.
 The app allocates memory incrementally until it reaches the system’s limit, records the maximum allocated amount alongside the iOS version, and displays real-time memory usage statistics. It’s particularly useful for emulation user's that may be wary about their iOS version's allocation methods. 
 
-##Features
+## Features
 
 Memory Benchmarking: Allocates memory in chunks (from 16 KB to 100 MB) until the system denies further allocations.
 iOS Version Tracking: Saves benchmark results with the iOS version (e.g., 18.5), allowing comparison across updates.
@@ -15,7 +15,7 @@ This App’s RAM
 Free RAM
 
 
-##How It Works (for nerds)
+## How It Works (for nerds)
 
 
 Benchmarking:
@@ -38,13 +38,13 @@ Updates occur every second via a Timer in ContentView, ensuring real-time stats.
 
 
 
-##Limitations
+## Limitations
 
 iOS Restrictions: Mach APIs provide limited per-process memory details due to sandboxing, so metrics are system-wide or app-specific.
 Memory Compression: iOS compresses memory, so the app’s reported RAM (e.g., 6 GB allocated) may use less physical RAM (e.g., 5.8 GB).
 Rounding: Total RAM is rounded (e.g., 7.98 GB to 8 GB) for simplicity, which may slightly skew calculations.
 
-##Installation
+## Installation
 
 Sideload or build the project in Xcode with the increased memory entitlement. 
 Usage
@@ -55,8 +55,8 @@ View the maximum allocated RAM (e.g., “Last benchmark: 6.123 GB (iOS 18.5)”)
 Monitor real-time memory stats, updated every second.
 Tap “Clear Results” to reset saved benchmarks.
 
-##Contributing
+## Contributing
 Contributions are welcome! Please submit issues or pull requests for bug fixes, feature enhancements, or documentation improvements, respecting the CC BY-NC 4.0 license.
 
-##License
+## License
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0). You are free to share and adapt the material, provided you give appropriate credit and do not use it for commercial purposes.
