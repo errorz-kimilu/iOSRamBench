@@ -5,7 +5,6 @@ RAMBench is a iOS app designed to benchmark the RAM limits of your iOS device, h
 The app allocates memory incrementally until it reaches the system’s limit, records the maximum allocated amount alongside the iOS version, and displays real-time memory usage statistics. It’s particularly useful for emulation user's that may be wary about their iOS version's allocation methods. 
 
 ## Features
-
 Memory Benchmarking: Allocates memory in chunks (from 16 KB to 100 MB) until the system denies further allocations.
 iOS Version Tracking: Saves benchmark results with the iOS version (e.g., 18.5), allowing comparison across updates.
 Real-Time Memory Stats: Updates every second to show:
@@ -16,8 +15,6 @@ Free RAM
 
 
 ## How It Works (for nerds)
-
-
 Benchmarking:
 
 The MemoryBenchmark class allocates memory using malloc in chunks, starting at 100 MB and reducing up to 16 KB as it nears the system limit.
@@ -39,16 +36,14 @@ Updates occur every second via a Timer in ContentView, ensuring real-time stats.
 
 
 ## Limitations
-
 iOS Restrictions: Mach APIs provide limited per-process memory details due to sandboxing, so metrics are system-wide or app-specific.
 Memory Compression: iOS compresses memory, so the app’s reported RAM (e.g., 6 GB allocated) may use less physical RAM (e.g., 5.8 GB).
 Rounding: Total RAM is rounded (e.g., 7.98 GB to 8 GB) for simplicity, which may slightly skew calculations.
 
 ## Installation
-
 Sideload or build the project in Xcode with the increased memory entitlement. 
-Usage
 
+## Usage
 Launch the app.
 Tap “Start Benchmark” to allocate memory until the system limit is reached.
 View the maximum allocated RAM (e.g., “Last benchmark: 6.123 GB (iOS 18.5)”).
