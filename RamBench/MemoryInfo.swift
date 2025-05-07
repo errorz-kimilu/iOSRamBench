@@ -1,4 +1,5 @@
 import Darwin
+import Darwin.Mach
 
 // Get the total physical memory of the device (in bytes)
 func getTotalMemory() -> UInt64 {
@@ -12,9 +13,21 @@ func getTotalMemory() -> UInt64 {
 func getRoundedTotalMemory() -> UInt64 {
     let totalBytes = getTotalMemory()
     let totalGB = Double(totalBytes) / (1024.0 * 1024.0 * 1024.0)
-    let standardSizes = [2.0, 3.0, 4.0, 6.0, 8.0, 12.0, 16.0]
+    let standardSizes = [3.0, 4.0, 6.0, 8.0, 12.0, 16.0]
     let closestSize = standardSizes.min { abs($0 - totalGB) < abs($1 - totalGB) } ?? 8.0
     return UInt64(closestSize * 1024.0 * 1024.0 * 1024.0)
+}
+
+// Get the resident memory size of the current app (in bytes)
+func getAppMemoryUsage() -> UInt64 {
+    var taskInfo = task_basic_info()
+    var count = mach_msg_type_number_t(MemoryLayout<task_basic_info>.size / MemoryLayout<Int32>.size)
+    let result = withUnsafeMutablePointer(to: &taskInfo) {
+        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, UInt32(TASK_BASIC_INFO), $0, &count)
+        }
+    }
+    return result == KERN_SUCCESS ? UInt64(taskInfo.resident_size) : 0
 }
 
 func getMemoryUsage() -> (free: UInt64, active: UInt64, inactive: UInt64, wired: UInt64) {
@@ -47,6 +60,7 @@ func getMemoryUsage() -> (free: UInt64, active: UInt64, inactive: UInt64, wired:
 
 struct MemoryInfo {
     let total: UInt64
+    let used: UInt64
     let activeAndInactive: UInt64
     let free: UInt64
     let systemUsed: UInt64
@@ -55,6 +69,8 @@ struct MemoryInfo {
 func getMemoryInfo() -> MemoryInfo {
     let total = getRoundedTotalMemory()
     let (free, active, inactive, wired) = getMemoryUsage()
-    let activeAndInactive = active + inactive
-    return MemoryInfo(total: total, activeAndInactive: activeAndInactive, free: free, systemUsed: wired)
+    let appMemory = getAppMemoryUsage()
+    let activeAndInactive = (active + inactive) > appMemory ? (active + inactive) - appMemory : 0
+    let used = total - free
+    return MemoryInfo(total: total, used: used, activeAndInactive: activeAndInactive, free: free, systemUsed: wired)
 }

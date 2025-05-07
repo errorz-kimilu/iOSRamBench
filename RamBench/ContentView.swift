@@ -4,13 +4,12 @@ struct ContentView: View {
     @StateObject private var benchmark = MemoryBenchmark()
     @State private var isRunning = false
     @State private var memoryInfo: MemoryInfo = getMemoryInfo()
-    @State private var timer: Timer?
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    Text("iOS RAM Benchmark")
+                    Text("RAM Benchmark")
                         .font(.largeTitle)
                         .bold()
                     
@@ -70,6 +69,10 @@ struct ContentView: View {
                         .font(.headline)
                     
                     Text("Total Device RAM: \(formatBytes(memoryInfo.total))")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .italic()
+                    
                     GeometryReader { geometry in
                         ZStack(alignment: .leading) {
                             Rectangle()
@@ -84,14 +87,14 @@ struct ContentView: View {
                                 .fill(Color.blue)
                                 .frame(
                                     width: geometry.size.width * 0.8 * min(
-                                        CGFloat(memoryInfo.activeAndInactive + memoryInfo.systemUsed) / CGFloat(memoryInfo.total),
+                                        CGFloat(memoryInfo.used) / CGFloat(memoryInfo.total),
                                         1.0
                                     ),
                                     height: 20
                                 )
                                 .cornerRadius(4)
                             
-                            Text("\(formatBytes(memoryInfo.activeAndInactive + memoryInfo.systemUsed)) out of \(formatBytes(memoryInfo.total))")
+                            Text("\(formatBytes(memoryInfo.used)) used out of \(formatBytes(memoryInfo.total))")
                                 .font(.caption2)
                                 .foregroundColor(.white)
                                 .shadow(radius: 1)
@@ -103,23 +106,25 @@ struct ContentView: View {
                     }
                     .frame(height: 20)
                     
-                    Text("Active and inactive RAM: \(formatBytes(memoryInfo.activeAndInactive))")
-                    Text("Completely free RAM: \(formatBytes(memoryInfo.free))")
-                    Text("System used RAM: \(formatBytes(memoryInfo.systemUsed))")
+                    Text("Total Used RAM: \(formatBytes(memoryInfo.used)) (all apps and system)")
+                        .font(.subheadline)
+                    Text("Active and Inactive RAM: \(formatBytes(memoryInfo.activeAndInactive)) (app data including RamBench)")
+                        .font(.subheadline)
+                    Text("Free RAM: \(formatBytes(memoryInfo.free)) (available for use)")
+                        .font(.subheadline)
+                    Text("System RAM: \(formatBytes(memoryInfo.systemUsed)) (reserved by OS)")
+                        .font(.subheadline)
                     
                     Spacer()
                 }
                 .padding()
             }
-           
             .onAppear {
-                timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                    memoryInfo = getMemoryInfo()
+                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                    DispatchQueue.main.async {
+                        memoryInfo = getMemoryInfo()
+                    }
                 }
-            }
-            .onDisappear {
-                timer?.invalidate()
-                timer = nil
             }
         }
     }
