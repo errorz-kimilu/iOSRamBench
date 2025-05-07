@@ -1,13 +1,16 @@
 import Foundation
+import UIKit
 
 class MemoryBenchmark: ObservableObject {
     @Published var totalAllocated: Int = 0
-    @Published var previousResults: [Double] = [] // in GB
+    @Published var previousResults: [[String: Any]] = []
 
-    private var allocatedMemory: [UnsafeMutableRawPointer] = []
-    private let chunkSize = 100 * 1024 * 1024 // 100 MB
-    private let delay: TimeInterval = 1.0 // 100MB per second
+    private var allocatedPointers: [UnsafeMutableRawPointer] = []
+    private let storageKey = "benchmarks_data"
+    private let totalRAM = ProcessInfo.processInfo.physicalMemory
     private var isRunning = false
+    private let GB = 1024 * 1024 * 1024
+    private let MB = 1024 * 1024
 
     init() {
         loadPreviousResults()
@@ -17,69 +20,79 @@ class MemoryBenchmark: ObservableObject {
         guard !isRunning else { return }
         isRunning = true
         totalAllocated = 0
-        allocatedMemory.removeAll()
+        allocatedPointers.removeAll()
 
-        // Append placeholder for live result
-        var saved = UserDefaults.standard.array(forKey: "benchmarks_gb") as? [Double] ?? []
-        saved.append(0)
-        UserDefaults.standard.set(saved, forKey: "benchmarks_gb")
-        previousResults = saved
+        let iosVersion = UIDevice.current.systemVersion
 
-        allocateNextChunk(completion: completion)
+    
+        var saved = UserDefaults.standard.array(forKey: storageKey) as? [[String: Any]] ?? []
+        saved.append(["gb": 0.0, "iosVersion": iosVersion])
+        UserDefaults.standard.set(saved, forKey: storageKey)
+        DispatchQueue.main.async { self.previousResults = saved }
+
+        allocateNext(completion: completion)
     }
 
-    private func allocateNextChunk(completion: @escaping (Double) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + delay) {
-            let pointer = malloc(self.chunkSize)
-            if let ptr = pointer {
-                memset(ptr, 0, self.chunkSize)
-                self.allocatedMemory.append(ptr)
+    private func allocateNext(completion: @escaping (Double) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
+            let remaining = UInt64(self.totalRAM) > UInt64(self.totalAllocated)
+                ? UInt64(self.totalRAM) - UInt64(self.totalAllocated)
+                : 0
+
+            // Pick chunk based on how close we are to total ram
+            let chunk: Int = {
+                switch remaining {
+                case let x where x > 2 * UInt64(self.GB):      return 100 * self.MB
+                case let x where x > 512 * UInt64(self.MB):    return 10  * self.MB
+                case let x where x > 64  * UInt64(self.MB):    return 1   * self.MB
+                case let x where x > 8   * UInt64(self.MB):    return 256 * 1024 //KB below
+                case let x where x > 2   * UInt64(self.MB):    return 64  * 1024
+                default:                                        return 16  * 1024
+                }
+            }()
+
+            if let ptr = malloc(chunk) {
+                memset(ptr, 0, chunk)
+                self.allocatedPointers.append(ptr)
 
                 DispatchQueue.main.async {
-                    self.totalAllocated += self.chunkSize
-                    let gbUsed = Double(self.totalAllocated) / (1024 * 1024 * 1024)
-                    self.saveIntermediateResult(gbUsed)
-                    self.allocateNextChunk(completion: completion)
+                    self.totalAllocated += chunk
+                    let gb = Double(self.totalAllocated) / Double(self.GB)
+                    self.saveIntermediate(gb)
+                    self.allocateNext(completion: completion)
                 }
             } else {
                 self.isRunning = false
-                let gbUsed = Double(self.totalAllocated) / (1024 * 1024 * 1024)
-                completion(gbUsed)
+                let gb = Double(self.totalAllocated) / Double(self.GB)
+                completion(gb)
             }
         }
     }
 
     func clearMemory() {
-        for pointer in allocatedMemory {
-            free(pointer)
-        }
-        allocatedMemory.removeAll()
+        allocatedPointers.forEach { free($0) }
+        allocatedPointers.removeAll()
         totalAllocated = 0
         isRunning = false
     }
 
-    private func saveIntermediateResult(_ result: Double) {
-        var saved = UserDefaults.standard.array(forKey: "benchmarks_gb") as? [Double] ?? []
+    func clearSavedResults() {
+        UserDefaults.standard.removeObject(forKey: storageKey)
+        previousResults = []
+    }
 
-        if saved.isEmpty {
-            saved.append(result)
+    private func saveIntermediate(_ gb: Double) {
+        var all = previousResults
+        if all.isEmpty {
+            all.append(["gb": gb, "iosVersion": UIDevice.current.systemVersion])
         } else {
-            saved[saved.count - 1] = result
+            all[all.count - 1]["gb"] = gb
         }
-
-        UserDefaults.standard.set(saved, forKey: "benchmarks_gb")
-        DispatchQueue.main.async {
-            self.previousResults = saved
-        }
+        UserDefaults.standard.set(all, forKey: storageKey)
+        DispatchQueue.main.async { self.previousResults = all }
     }
 
     private func loadPreviousResults() {
-        previousResults = UserDefaults.standard.array(forKey: "benchmarks_gb") as? [Double] ?? []
-    }
-
-    func clearSavedResults() {
-        UserDefaults.standard.removeObject(forKey: "benchmarks_gb")
-        previousResults = []
+        previousResults = UserDefaults.standard.array(forKey: storageKey) as? [[String: Any]] ?? []
     }
 }
-
