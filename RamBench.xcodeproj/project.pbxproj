@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5DA863CA2DCABCA300B8CC2E /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 5DA863C92DCABC9F00B8CC2E /* .gitignore */; };
+		5DA864622DCB198D00B8CC2E /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 5DA864602DCB197000B8CC2E /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		5DA863A92DCAB71D00B8CC2E /* RamBenchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RamBenchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DA863B32DCAB71D00B8CC2E /* RamBenchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RamBenchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DA863C92DCABC9F00B8CC2E /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		5DA864602DCB197000B8CC2E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,6 +82,7 @@
 		5DA863932DCAB71C00B8CC2E = {
 			isa = PBXGroup;
 			children = (
+				5DA864602DCB197000B8CC2E /* README.md */,
 				5DA863C92DCABC9F00B8CC2E /* .gitignore */,
 				5DA8639E2DCAB71C00B8CC2E /* RamBench */,
 				5DA863AC2DCAB71D00B8CC2E /* RamBenchTests */,
@@ -218,6 +221,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DA864622DCB198D00B8CC2E /* README.md in Resources */,
 				5DA863CA2DCABCA300B8CC2E /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
