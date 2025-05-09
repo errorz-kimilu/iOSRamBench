@@ -41,10 +41,12 @@ class MemoryBenchmark: ObservableObject {
             
             let chunk: Int = {
                 switch remaining {
-                case let x where x > 2 * UInt64(self.GB):      return 200 * self.MB
-                case let x where x > 512 * UInt64(self.MB):    return 50  * self.MB
-                case let x where x > 64 * UInt64(self.MB):     return 5   * self.MB
-                default:                                        return 1   * self.MB
+                               case let x where x > 2 * UInt64(self.GB):      return 100 * self.MB
+                               case let x where x > 512 * UInt64(self.MB):    return 10  * self.MB
+                               case let x where x > 64  * UInt64(self.MB):    return 1   * self.MB
+                               case let x where x > 8   * UInt64(self.MB):    return 256 * 1024
+                               case let x where x > 2   * UInt64(self.MB):    return 64  * 1024
+                               default:                                        return 16  * 1024
                 }
             }()
 
