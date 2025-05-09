@@ -64,6 +64,7 @@ struct MemoryInfo {
     let activeAndInactive: UInt64
     let free: UInt64
     let systemUsed: UInt64
+    let appUsed: UInt64
 }
 
 func getMemoryInfo() -> MemoryInfo {
@@ -72,5 +73,5 @@ func getMemoryInfo() -> MemoryInfo {
     let appMemory = getAppMemoryUsage()
     let activeAndInactive = (active + inactive) > appMemory ? (active + inactive) - appMemory : 0
     let used = total - free
-    return MemoryInfo(total: total, used: used, activeAndInactive: activeAndInactive, free: free, systemUsed: wired)
+    return MemoryInfo(total: total, used: used, activeAndInactive: activeAndInactive, free: free, systemUsed: wired, appUsed: appMemory)
 }

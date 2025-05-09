@@ -1,11 +1,12 @@
 import Foundation
 import UIKit
+import Darwin.Mach
 
 class MemoryBenchmark: ObservableObject {
     @Published var totalAllocated: Int = 0
     @Published var previousResults: [[String: Any]] = []
 
-    private var allocatedPointers: [(UnsafeMutableRawPointer, Int)] = []
+    private var allocatedPointers: [(pointer: UnsafeMutableRawPointer, size: Int)] = []
     private let storageKey = "benchmarks_data"
     private let totalRAM = ProcessInfo.processInfo.physicalMemory
     private var isRunning = false
@@ -23,7 +24,7 @@ class MemoryBenchmark: ObservableObject {
         allocatedPointers.removeAll()
 
         let iosVersion = UIDevice.current.systemVersion
-
+        
         var saved = UserDefaults.standard.array(forKey: storageKey) as? [[String: Any]] ?? []
         saved.append(["gb": 0.0, "iosVersion": iosVersion])
         UserDefaults.standard.set(saved, forKey: storageKey)
@@ -33,28 +34,26 @@ class MemoryBenchmark: ObservableObject {
     }
 
     private func allocateNext(completion: @escaping (Double) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.1) {
             let remaining = UInt64(self.totalRAM) > UInt64(self.totalAllocated)
                 ? UInt64(self.totalRAM) - UInt64(self.totalAllocated)
                 : 0
-
+            
             let chunk: Int = {
                 switch remaining {
-                case let x where x > 2 * UInt64(self.GB):      return 100 * self.MB
-                case let x where x > 512 * UInt64(self.MB):    return 10  * self.MB
-                case let x where x > 64  * UInt64(self.MB):    return 1   * self.MB
-                case let x where x > 8   * UInt64(self.MB):    return 256 * 1024
-                case let x where x > 2   * UInt64(self.MB):    return 64  * 1024
-                default:                                        return 16  * 1024
+                case let x where x > 2 * UInt64(self.GB):      return 200 * self.MB
+                case let x where x > 512 * UInt64(self.MB):    return 50  * self.MB
+                case let x where x > 64 * UInt64(self.MB):     return 5   * self.MB
+                default:                                        return 1   * self.MB
                 }
             }()
 
             var address: vm_address_t = 0
             let kr = vm_allocate(mach_task_self_, &address, vm_size_t(chunk), VM_FLAGS_ANYWHERE)
-
             if kr == KERN_SUCCESS {
-                memset(UnsafeMutableRawPointer(bitPattern: UInt(address)), 0, chunk)
-                self.allocatedPointers.append((UnsafeMutableRawPointer(bitPattern: UInt(address))!, chunk))
+                let ptr = UnsafeMutableRawPointer(bitPattern: address)!
+                memset(ptr, 1, chunk)
+                self.allocatedPointers.append((ptr, chunk))
 
                 DispatchQueue.main.async {
                     self.totalAllocated += chunk
@@ -72,7 +71,8 @@ class MemoryBenchmark: ObservableObject {
 
     func clearMemory() {
         for (ptr, size) in allocatedPointers {
-            vm_deallocate(mach_task_self_, vm_address_t(UInt(bitPattern: ptr)), vm_size_t(size))
+            var address = vm_address_t(bitPattern: ptr)
+            vm_deallocate(mach_task_self_, address, vm_size_t(size))
         }
         allocatedPointers.removeAll()
         totalAllocated = 0

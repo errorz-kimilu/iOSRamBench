@@ -4,12 +4,16 @@ struct ContentView: View {
     @StateObject private var benchmark = MemoryBenchmark()
     @State private var isRunning = false
     @State private var memoryInfo: MemoryInfo = getMemoryInfo()
+    @State private var showInfoSheet = false
+    
+    private let extendedVirtualAddressing = checkAppEntitlement("com.apple.developer.kernel.extended-virtual-addressing")
+    private let increasedMemoryLimit = checkAppEntitlement("com.apple.developer.kernel.increased-memory-limit")
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    Text("RAM Benchmark")
+                    Text("RAMBench")
                         .font(.largeTitle)
                         .bold()
                     
@@ -40,7 +44,7 @@ struct ContentView: View {
                     
                     if let last = benchmark.previousResults.last,
                        let gb = last["gb"] as? Double,
-                       let iosVersion = last["iosVersion"] as? String {
+                       let iosVersion = last["iOS Version"] as? String {
                         Text(String(format: "Last benchmark: %.3f GB (iOS %@)", gb, iosVersion))
                             .font(.headline)
                             .foregroundColor(.green)
@@ -106,18 +110,69 @@ struct ContentView: View {
                     }
                     .frame(height: 20)
                     
-                    Text("Total Used RAM: \(formatBytes(memoryInfo.used)) (all apps and system)")
+                    Text("Total Physical RAM Used: \(formatBytes(memoryInfo.used)) (all apps and system)")
                         .font(.subheadline)
-                    Text("Active and Inactive RAM: \(formatBytes(memoryInfo.activeAndInactive)) (app data including RamBench)")
+                    Text("Active and Inactive RAM: \(formatBytes(memoryInfo.activeAndInactive)) (apps / cache)")
                         .font(.subheadline)
                     Text("Free RAM: \(formatBytes(memoryInfo.free)) (available for use)")
                         .font(.subheadline)
-                    Text("System RAM: \(formatBytes(memoryInfo.systemUsed)) (reserved by OS)")
+                    Text("System RAM: \(formatBytes(memoryInfo.systemUsed)) (reserved by iOS)")
+                        .font(.subheadline)
+                    
+                    Divider()
+                    
+                    VStack(alignment: .center, spacing: 0) {
+                        Text("Entitlements")
+                            .font(.headline)
+                        Link("Provided by Stossy11 :3", destination: URL(string: "https://github.com/stossy11")!)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    Text("Extended Virtual Addressing: \(extendedVirtualAddressing ? "Enabled" : "Not Enabled")")
+                        .font(.subheadline)
+                    Text("Increased Memory Limit: \(increasedMemoryLimit ? "Enabled" : "Not Enabled")")
                         .font(.subheadline)
                     
                     Spacer()
                 }
                 .padding()
+            }
+            .navigationTitle("")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        showInfoSheet = true
+                    }) {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .sheet(isPresented: $showInfoSheet) {
+                VStack(spacing: 20) {
+                    Text("About RAMBench")
+                        .font(.title)
+                        .bold()
+                    
+                    Text("""
+RAMBench tests your device's RAM limits by allocating memory until the system kills the process, helping you understand how much memory apps can use, especially with iOS 18.2–18.5 limit changes.
+
+**Warning**: Benchmarking may strain your device, Use cautiously and avoid running other heavy apps simultaneously. The memory information displayed is NOT 100% accurate and neither is benchmarking tool. Do not use tests as a final verdict on anything.
+
+""")
+                        .font(.body)
+                        .multilineTextAlignment(.leading)
+                    
+                    Button("Dismiss") {
+                        showInfoSheet = false
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .padding()
+                .presentationDetents([.medium])
             }
             .onAppear {
                 Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
