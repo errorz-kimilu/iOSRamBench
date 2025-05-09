@@ -3,6 +3,4 @@ Creative Commons Attribution-NonCommercial 4.0 International
 This project’s source code is licensed under the CC BY-NC 4.0 License.
 You may remix, adapt, and build upon the code non-commercially, and must give appropriate credit.
 
-This license does not apply to any Pokémon-related assets (names, images, trademarks), which are owned by their respective copyright holders and used here under fair use for non-commercial, fan-made purposes.
-
 Full license text: https://creativecommons.org/licenses/by-nc/4.0/legalcode
