@@ -1,5 +1,7 @@
 import Darwin
 import Darwin.Mach
+import Foundation
+import UIKit
 
 // Get the total physical memory of the device (in bytes)
 func getTotalMemory() -> UInt64 {
@@ -65,6 +67,18 @@ struct MemoryInfo {
     let free: UInt64
     let systemUsed: UInt64
     let appUsed: UInt64
+    let ramSizeGB: Double
+    
+    var description: String {
+        let gb = 1024.0 * 1024.0 * 1024.0
+        return """
+        Device RAM: \(String(format: "%.1f", Double(total) / gb)) GB
+        Free: \(String(format: "%.1f", Double(free) / gb)) GB
+        App Usage: \(String(format: "%.1f", Double(appUsed) / (1024.0 * 1024.0))) MB
+        System Usage: \(String(format: "%.1f", Double(systemUsed) / gb)) GB
+        Other Apps: \(String(format: "%.1f", Double(activeAndInactive) / gb)) GB
+        """
+    }
 }
 
 func getMemoryInfo() -> MemoryInfo {
@@ -73,5 +87,16 @@ func getMemoryInfo() -> MemoryInfo {
     let appMemory = getAppMemoryUsage()
     let activeAndInactive = (active + inactive) > appMemory ? (active + inactive) - appMemory : 0
     let used = total - free
-    return MemoryInfo(total: total, used: used, activeAndInactive: activeAndInactive, free: free, systemUsed: wired, appUsed: appMemory)
+    let ramSizeGB = Double(total) / (1024.0 * 1024.0 * 1024.0)
+    
+    return MemoryInfo(
+        total: total,
+        used: used,
+        activeAndInactive: activeAndInactive,
+        free: free,
+        systemUsed: wired,
+        appUsed: appMemory,
+        ramSizeGB: ramSizeGB
+    )
 }
+
